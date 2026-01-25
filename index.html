@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가바보 용사 관리 시스템</title>
+    <style>
+        @font-face {
+            font-family: 'DungGeunMo';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
+        }
+        :root { --pixel-border: 4px solid #000; }
+        body { font-family: 'DungGeunMo', sans-serif; margin: 0; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        
+        .container { background: #fff; border: var(--pixel-border); padding: 25px; box-shadow: 10px 10px 0 rgba(0,0,0,0.1); width: 1050px; position: relative; }
+        
+        /* [학생용] 캐릭터 섹션 */
+        .char-section { 
+            width: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            border-right: 3px dashed #000; padding-right: 20px; min-height: 400px;
+        }
+        .sword-icon { font-size: 100px; margin-bottom: 15px; line-height: 1; filter: drop-shadow(5px 5px 0px rgba(0,0,0,0.1)); }
+        .char-name { background: #ffcc00; border: var(--pixel-border); padding: 8px 20px; font-size: 26px; color: #000; text-align: center; width: 180px; }
+
+        /* [교사용] 지침 준수 */
+        #teacherSection { width: 1550px; } 
+        #teacherSection h2 { font-size: 36px; }
+        .admin-panel { margin-bottom: 20px; padding: 15px; background: #eee; border: 2px solid #000; font-size: 20px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; border: 2px solid #000; }
+        th { background: #333 !important; color: #fff !important; padding: 15px 5px; border: 1px solid #444; font-size: 20px; text-align: center; }
+        
+        /* 수치 2배 확대 (40px) */
+        td { padding: 15px 5px; border: 1px solid #000; text-align: center; font-size: 40px; color: #000; line-height: 1.2; }
+        td.st-info { font-size: 22px; } 
+
+        .bg-s { background: #eef7ff; } .bg-r { background: #fff9db; } .bg-p { background: #ebfbee; }
+        .bold { font-weight: bold; }
+        
+        /* 특별포인트 입력칸 */
+        .extra-input { 
+            width: 100px; padding: 5px; font-family: 'DungGeunMo'; border: 4px solid #333; 
+            text-align: center; font-size: 40px; background: #fff176; 
+        }
+
+        /* 학생용 스탯 레이아웃 및 슬라이더 정밀 조정 */
+        .student-layout { display: flex; gap: 30px; align-items: stretch; }
+        .stat-section { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .point-info { background: #ffeb3b; border: var(--pixel-border); padding: 10px; text-align: center; margin-bottom: 20px; font-size: 20px; font-weight: bold; }
+        .stat-row { margin-bottom: 18px; }
+        .stat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 20px; }
+        .ability-badge { border: 2px solid #000; padding: 4px 12px; background: #fff; font-size: 16px; }
+        
+        /* 슬라이더 바 컨테이너: 끝부분 일치를 위해 overflow hidden 및 padding 제거 */
+        .bar-container { height: 32px; background: #eee; border: 3px solid #000; position: relative; overflow: visible; padding: 0; margin: 0; }
+        .bar-fill { height: 100%; transition: width 0.1s; width: 0%; }
+        
+        /* 슬라이더 인풋: 바의 좌우 끝과 완벽히 일치하도록 설정 */
+        .slider { 
+            position: absolute; top: -3px; left: -2px; width: calc(100% + 4px); height: calc(100% + 6px); 
+            -webkit-appearance: none; background: transparent; z-index: 10; cursor: pointer; margin: 0; padding: 0;
+        }
+        .slider:focus { outline: none; }
+        /* 슬라이더 핸들(Thumb) */
+        .slider::-webkit-slider-thumb { 
+            -webkit-appearance: none; width: 12px; height: 42px; background: #000; 
+            border: 1px solid #fff; cursor: pointer; 
+        }
+        .slider::-moz-range-thumb { 
+            width: 12px; height: 42px; background: #000; border: 1px solid #fff; cursor: pointer; 
+        }
+        
+        button { font-family: 'DungGeunMo'; padding: 12px 24px; border: var(--pixel-border); cursor: pointer; background: #aed581; font-size: 20px; }
+        #loginSection { position: fixed; z-index: 100; background: white; padding: 40px; border: var(--pixel-border); text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div id="loginSection">
+        <h2>⚔️ 용사 시스템 접속</h2>
+        <input type="text" id="loginCode" placeholder="코드를 입력하세요" style="padding:10px; font-family:'DungGeunMo'; border:3px solid #000; width:220px; font-size:18px;"><br><br>
+        <button onclick="login()">입장하기</button>
+    </div>
+
+    <div class="container" id="studentSection" style="display:none;">
+        <div class="student-layout">
+            <div class="char-section">
+                <div class="sword-icon">⚔️</div>
+                <div class="char-name" id="stNameDisplay">용사</div>
+            </div>
+            <div class="stat-section">
+                <div id="pointInfo" class="point-info">포인트 계산 중...</div>
+                <div class="stat-row">
+                    <div class="stat-header"><span>✌️ 가위: <b id="val_s">0</b></span> <span class="ability-badge" id="badge_s" style="color:blue;">공격력 +2</span></div>
+                    <div class="bar-container"><div class="bar-fill" id="fill_s" style="background:#4da6ff;"></div><input type="range" id="in_s" class="slider" min="0" max="20" value="0" oninput="updateUI()"></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-header"><span>✊ 바위: <b id="val_r">0</b></span> <span class="ability-badge" id="badge_r" style="color:orange;">회복력 +0</span></div>
+                    <div class="bar-container"><div class="bar-fill" id="fill_r" style="background:#ffa500;"></div><input type="range" id="in_r" class="slider" min="0" max="20" value="0" oninput="updateUI()"></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-header"><span>🖐️ 보: <b id="val_p">0</b></span> <span class="ability-badge" id="badge_p" style="color:green;">피해감소 -0</span></div>
+                    <div class="bar-container"><div class="bar-fill" id="fill_p" style="background:#4caf50;"></div><input type="range" id="in_p" class="slider" min="0" max="20" value="0" oninput="updateUI()"></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-header"><span>❤️ 체력: <b id="val_h">1</b></span></div>
+                    <div class="bar-container"><div class="bar-fill" id="fill_h" style="background:#e63946;"></div><input type="range" id="in_h" class="slider" min="1" max="20" value="1" oninput="updateUI()"></div>
+                </div>
+                <div id="sumBar" style="padding:15px; border:3px solid #000; text-align:center; font-weight:bold; margin-top:10px; font-size:20px;">합계 확인 중...</div>
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button onclick="saveStats()" style="flex:2;">스탯 확정 및 저장</button>
+                    <button onclick="location.reload()" style="flex:1; background:#eee; color:#000;">로그아웃</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="teacherSection" style="display:none;">
+        <h2>📋 용사 관리자 모드</h2>
+        <div class="admin-panel">
+            <strong>⚙️ 시스템 설정</strong><br>
+            앱키: <input type="text" id="configApiKey" style="width:450px; padding:5px; font-family:'DungGeunMo';">
+            <button onclick="saveConfig()" style="background:#ddd; padding:5px 15px;">설정 저장</button>
+            <hr style="border:1px dashed #aaa; margin:15px 0;">
+            <strong>👥 학생 일괄 등록</strong><br>
+            <textarea id="bulkInput" style="width:100%; height:80px; margin-top:10px; font-family:'DungGeunMo'; font-size:18px;" placeholder="이름과 코드를 입력하세요 (예: 홍길동 1001)"></textarea>
+            <button id="regBtn" onclick="bulkRegister()" style="background:#4da6ff; color:white; width:100%; margin-top:10px;">학생 목록 등록 및 조회</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>학생명(코드)</th>
+                    <th>레벨</th>
+                    <th>특별포인트</th>
+                    <th>✌️가위</th>
+                    <th>⚔️공격</th>
+                    <th>✊바위</th>
+                    <th>✨회복</th>
+                    <th>🖐️보</th>
+                    <th>🛡️방어</th>
+                    <th>❤️체력</th>
+                    <th style="background:#d32f2f !important;">점검</th>
+                </tr>
+            </thead>
+            <tbody id="teacherTableBody"></tbody>
+        </table>
+        <button onclick="location.reload()" style="margin-top:20px; width:100%; background:#000; color:#fff;">관리자 로그아웃</button>
+    </div>
+
+    <script>
+        let API_KEY = localStorage.getItem('v_api_key') || "dd76342663eba41ce22a80451c96f26e028750feac6f00a0";
+        const BASE_URL = "https://api.dahandin.com/openapi/v1/get/student/total";
+        let currentUser = null;
+        let targetTotal = 0;
+
+        async function login() {
+            const code = document.getElementById('loginCode').value.trim();
+            if(!code) return alert("코드를 입력하세요!");
+            if(code === "csgo10") { showTeacher(); return; }
+            const userKey = `v_user_${code}`;
+            const studentInfo = JSON.parse(localStorage.getItem(userKey));
+            if(!studentInfo) return alert("등록되지 않은 코드입니다.");
+            try {
+                const response = await fetch(`${BASE_URL}?code=${code}`, { headers: { "X-API-Key": API_KEY } });
+                const result = await response.json();
+                const data = result.data || result;
+                const indExtra = parseInt(studentInfo.extra) || 0;
+                currentUser = { code, name: data.name || studentInfo.name, cookie: data.cookie || 0, extra: indExtra };
+                const lvPoint = Math.floor((Number(currentUser.cookie) || 0) / 10);
+                targetTotal = lvPoint + indExtra;
+                document.getElementById('stNameDisplay').innerText = currentUser.name;
+                document.getElementById('pointInfo').innerText = `가용 포인트: ${targetTotal} (Lv.${lvPoint} + 특별 ${indExtra})`;
+                const saved = JSON.parse(localStorage.getItem(`v_stat_${code}`));
+                if(saved) {
+                    document.getElementById('in_s').value = saved.s;
+                    document.getElementById('in_r').value = saved.r;
+                    document.getElementById('in_p').value = saved.p;
+                    document.getElementById('in_h').value = saved.h;
+                }
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('studentSection').style.display = 'block';
+                updateUI();
+            } catch(e) { alert("데이터 로딩 실패!"); }
+        }
+
+        function updateUI() {
+            const s = parseInt(document.getElementById('in_s').value), r = parseInt(document.getElementById('in_r').value), p = parseInt(document.getElementById('in_p').value), h = parseInt(document.getElementById('in_h').value);
+            ['s','r','p','h'].forEach(id => {
+                const val = eval(id);
+                document.getElementById('val_'+id).innerText = val;
+                // 바 채우기 계산 (최대 20 기준)
+                document.getElementById('fill_'+id).style.width = (val / 20 * 100) + '%';
+            });
+            const atk = s >= 20 ? 4 : (s >= 10 ? 3 : 2), rec = r >= 20 ? 2 : (r >= 10 ? 1 : 0), def = p >= 20 ? 2 : (p >= 10 ? 1 : 0);
+            document.getElementById('badge_s').innerText = `공격력 +${atk}`;
+            document.getElementById('badge_r').innerText = `회복력 +${rec}`;
+            document.getElementById('badge_p').innerText = `피해감소 -${def}`;
+            const sum = s + r + p + h;
+            const bar = document.getElementById('sumBar');
+            bar.innerText = `현재 합계: ${sum} / 목표: ${targetTotal}`;
+            bar.style.backgroundColor = (sum === targetTotal) ? "#d4edda" : "#f8d7da";
+        }
+
+        function saveStats() {
+            const s = parseInt(document.getElementById('in_s').value), r = parseInt(document.getElementById('in_r').value), p = parseInt(document.getElementById('in_p').value), h = parseInt(document.getElementById('in_h').value);
+            if(s+r+p+h !== targetTotal) return alert("목표 포인트와 합계가 맞지 않습니다!");
+            localStorage.setItem(`v_stat_${currentUser.code}`, JSON.stringify({ name: currentUser.name, s, r, p, h, lv: Math.floor(currentUser.cookie/10), extra: currentUser.extra }));
+            alert("저장 완료!");
+        }
+
+        function showTeacher() { document.getElementById('loginSection').style.display = 'none'; document.getElementById('teacherSection').style.display = 'block'; document.getElementById('configApiKey').value = API_KEY; loadAdminTable(); }
+        function saveConfig() { localStorage.setItem('v_api_key', document.getElementById('configApiKey').value); alert("앱키가 저장되었습니다."); location.reload(); }
+        function autoSaveExtra(code, val) { const userKey = `v_user_${code}`; const userData = JSON.parse(localStorage.getItem(userKey)); if(userData) { userData.extra = parseInt(val) || 0; localStorage.setItem(userKey, JSON.stringify(userData)); loadAdminTable(); } }
+
+        async function bulkRegister() {
+            const input = document.getElementById('bulkInput').value.trim(); if(!input) return;
+            const btn = document.getElementById('regBtn'); btn.innerText = "조회 중..."; btn.disabled = true;
+            const lines = input.split(/[\s\n,]+/);
+            for(let i=0; i<lines.length; i+=2) {
+                const name = lines[i], code = lines[i+1];
+                if(name && code) {
+                    try {
+                        const res = await fetch(`${BASE_URL}?code=${code}`, { headers: { "X-API-Key": API_KEY } });
+                        const data = (await res.json()).data || {};
+                        const existing = JSON.parse(localStorage.getItem(`v_user_${code}`)) || { extra: 0 };
+                        localStorage.setItem(`v_user_${code}`, JSON.stringify({ name: data.name || name, cookie: data.cookie || 0, extra: existing.extra }));
+                    } catch(e) { localStorage.setItem(`v_user_${code}`, JSON.stringify({ name: name, cookie: 0, extra: 0 })); }
+                }
+            }
+            btn.innerText = "학생 목록 등록 및 조회"; btn.disabled = false; loadAdminTable();
+        }
+
+        function loadAdminTable() {
+            const body = document.getElementById('teacherTableBody'); body.innerHTML = "";
+            let keys = []; for(let i=0; i<localStorage.length; i++) if(localStorage.key(i).startsWith('v_user_')) keys.push(localStorage.key(i));
+            keys.sort().forEach(key => {
+                const code = key.replace('v_user_', ''), user = JSON.parse(localStorage.getItem(key)), stat = JSON.parse(localStorage.getItem(`v_stat_${code}`)) || {s:0, r:0, p:0, h:1};
+                const currentLv = Math.floor((user.cookie || 0) / 10);
+                const extra = parseInt(user.extra) || 0;
+                const atk = stat.s >= 20 ? 4 : (stat.s >= 10 ? 3 : 2), rec = stat.r >= 20 ? 2 : (stat.r >= 10 ? 1 : 0), def = stat.p >= 20 ? 2 : (stat.p >= 10 ? 1 : 0);
+                const goal = currentLv + extra;
+                const currentSum = stat.s + stat.r + stat.p + stat.h;
+                const checkMark = (goal === currentSum) ? "<span style='color:green;'>○</span>" : "<span style='color:red;'>×</span>";
+                body.innerHTML += `<tr><td class="st-info bold">${user.name}<br>(${code})</td><td class="bold">${currentLv}</td><td><input type="number" class="extra-input" value="${extra}" onchange="autoSaveExtra('${code}', this.value)"></td><td class="bg-s">${stat.s}</td><td class="bg-s bold" style="color:blue">+${atk}</td><td class="bg-r">${stat.r}</td><td class="bg-r bold" style="color:orange">+${rec}</td><td class="bg-p">${stat.p}</td><td class="bg-p bold" style="color:green">-${def}</td><td class="bold">${stat.h}</td><td class="bold">${checkMark}</td></tr>`;
+            });
+        }
+    </script>
+</body>
+</html>
